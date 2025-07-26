@@ -54,297 +54,278 @@ const int maxConnectionAttempts = 20;
 AsyncWebServer server(80);
 AsyncWebSocket wsCarInput("/CarInput");
 
+// --- NEW BEAUTIFUL HTML INTERFACE ---
 const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>RC Car Control</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ESP32 RC Car</title>
     <style>
-      :root {
-        --primary-color: #0074D9;  /* Blue */
-        --secondary-color: #FFDC00; /* Yellow */
-        --text-color: #111;
-        --background-color: #f9f9f9;
-        --button-color: var(--primary-color);
-        --button-shadow: rgba(0, 0, 0, 0.3);
-        --slider-track: #d3d3d3;
-        --slider-thumb: var(--secondary-color);
-      }
-
-      [data-theme="dark"] {
-        --primary-color: #004e92;  /* Darker Blue */
-        --secondary-color: #FFD700; /* Gold Yellow */
-        --text-color: #f0f0f0;
-        --background-color: #121212;
-        --button-color: var(--primary-color);
-        --button-shadow: rgba(0, 0, 0, 0.5);
-        --slider-track: #444;
-        --slider-thumb: var(--secondary-color);
-      }
-
-      body {
-        background-color: var(--background-color);
-        color: var(--text-color);
-        font-family: Arial, sans-serif;
-        transition: all 0.3s ease;
-      }
-
-      .theme-switch {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .theme-switch-checkbox {
-        height: 0;
-        width: 0;
-        visibility: hidden;
-      }
-
-      .theme-switch-label {
-        cursor: pointer;
-        width: 50px;
-        height: 24px;
-        background: var(--primary-color);
-        display: block;
-        border-radius: 24px;
-        position: relative;
-      }
-
-      .theme-switch-label:after {
-        content: '';
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        width: 18px;
-        height: 18px;
-        background: var(--secondary-color);
-        border-radius: 18px;
-        transition: 0.3s;
-      }
-
-      .theme-switch-checkbox:checked + .theme-switch-label:after {
-        left: calc(100% - 3px);
-        transform: translateX(-100%);
-      }
-
-      .theme-icon {
-        font-size: 16px;
-      }
-
-      .arrows {
-        font-size: 30px;
-        color: var(--secondary-color);
-      }
-
-      td.button {
-        background-color: var(--button-color);
-        border-radius: 25%;
-        box-shadow: 5px 5px var(--button-shadow);
-        margin: 10px;
-        cursor: pointer;
-      }
-
-      td.button:active {
-        transform: translate(5px,5px);
-        box-shadow: none;
-      }
-
-      .noselect {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-      }
-
-      .slidecontainer {
-        width: 100%;
-      }
-
-      .slider {
-        -webkit-appearance: none;
-        width: 100%;
-        height: 15px;
-        border-radius: 5px;
-        background: var(--slider-track);
-        outline: none;
-        opacity: 0.7;
-        -webkit-transition: .2s;
-        transition: opacity .2s;
-      }
-
-      .slider:hover {
-        opacity: 1;
-      }
-
-      .slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 25px;
-        height: 25px;
-        border-radius: 50%;
-        background: var(--slider-thumb);
-        cursor: pointer;
-      }
-
-      .slider::-moz-range-thumb {
-        width: 25px;
-        height: 25px;
-        border-radius: 50%;
-        background: var(--slider-thumb);
-        cursor: pointer;
-      }
-
-      #mainTable {
-        width: 450px;
-        margin: auto;
-        table-layout: fixed;
-        border-spacing: 10px;
-      }
-
-      .control-label {
-        text-align: left;
-        font-weight: bold;
-        color: var(--text-color);
-      }
-
-      .title {
-        color: var(--primary-color);
-        margin-bottom: 15px;
-      }
-
-      @media (max-width: 500px) {
-        #mainTable {
-          width: 95%;
+        :root {
+            --bg-color: #e0e5ec;
+            --main-color: #007bff;
+            --accent-color: #ff9800;
+            --text-color: #333;
+            --card-bg: rgba(255, 255, 255, 0.6);
+            --shadow-light: #ffffff;
+            --shadow-dark: #a3b1c6;
+            --thumb-color: var(--main-color);
+            --track-color: rgba(0, 0, 0, 0.1);
         }
-      }
+
+        [data-theme="dark"] {
+            --bg-color: #1e1e1e;
+            --main-color: #00aaff;
+            --accent-color: #ffc107;
+            --text-color: #f0f0f0;
+            --card-bg: rgba(40, 40, 40, 0.6);
+            --shadow-light: #2c2c2c;
+            --shadow-dark: #141414;
+            --thumb-color: var(--accent-color);
+            --track-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h2.title {
+            text-align: center;
+            color: var(--main-color);
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .control-group { margin-bottom: 25px; }
+        .control-group:last-child { margin-bottom: 0; }
+        
+        .d-pad {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 15px;
+            width: 80%;
+            margin: 0 auto;
+        }
+        
+        .d-pad-button {
+            background: var(--bg-color);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            cursor: pointer;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.1s ease-in-out;
+        }
+        
+        .d-pad-button:active {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+            transform: scale(0.95);
+        }
+        
+        .d-pad-button svg {
+            width: 60%;
+            height: 60%;
+            fill: var(--main-color);
+        }
+
+        #btn-up { grid-column: 2; grid-row: 1; }
+        #btn-left { grid-column: 1; grid-row: 2; }
+        #btn-right { grid-column: 3; grid-row: 2; }
+        #btn-down { grid-column: 2; grid-row: 3; }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .slider-label {
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            background: var(--track-color);
+            border-radius: 5px;
+            outline: none;
+            box-shadow: inset 1px 1px 2px var(--shadow-dark);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--thumb-color);
+            cursor: pointer;
+            border: 3px solid var(--bg-color);
+            box-shadow: 2px 2px 4px var(--shadow-dark), -2px -2px 4px var(--shadow-light);
+            transition: transform 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--thumb-color);
+            cursor: pointer;
+            border: 3px solid var(--bg-color);
+            box-shadow: 2px 2px 4px var(--shadow-dark), -2px -2px 4px var(--shadow-light);
+        }
+
+        .theme-switch {
+            position: absolute; top: 20px; right: 20px; display: flex; align-items: center;
+        }
+        .theme-switch-checkbox { height: 0; width: 0; visibility: hidden; }
+        .theme-switch-label {
+            cursor: pointer; width: 45px; height: 24px; background: var(--shadow-dark);
+            display: block; border-radius: 24px; position: relative;
+        }
+        .theme-switch-label:after {
+            content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+            background: var(--bg-color); border-radius: 18px; transition: 0.3s;
+        }
+        .theme-switch-checkbox:checked + .theme-switch-label:after {
+            left: calc(100% - 3px); transform: translateX(-100%);
+        }
     </style>
-  </head>
-  <body class="noselect" align="center">
-    <h2 class="title">RC Car Control</h2>
+</head>
+<body>
 
     <div class="theme-switch">
-      <span class="theme-icon">Light</span>
-      <input class="theme-switch-checkbox" type="checkbox" id="theme-switch">
-      <label class="theme-switch-label" for="theme-switch"></label>
-      <span class="theme-icon">Dark</span>
+        <input class="theme-switch-checkbox" type="checkbox" id="theme-switch">
+        <label class="theme-switch-label" for="theme-switch"></label>
     </div>
 
-    <table id="mainTable">
-      <tr>
-        <td></td>
-        <td class="button" ontouchstart='sendButtonInput("MoveCar","1")' ontouchend='sendButtonInput("MoveCar","0")'>
-          <span class="arrows">⇧</span>
-        </td>
-        <td></td>
-      </tr>
-      <tr>
-        <td class="button" ontouchstart='sendButtonInput("MoveCar","3")' ontouchend='sendButtonInput("MoveCar","0")'>
-          <span class="arrows">⇦</span>
-        </td>
-        <td class="button"></td>
-        <td class="button" ontouchstart='sendButtonInput("MoveCar","4")' ontouchend='sendButtonInput("MoveCar","0")'>
-          <span class="arrows">⇨</span>
-        </td>
-      </tr>
-      <tr>
-        <td></td>
-        <td class="button" ontouchstart='sendButtonInput("MoveCar","2")' ontouchend='sendButtonInput("MoveCar","0")'>
-          <span class="arrows">⇩</span>
-        </td>
-        <td></td>
-      </tr>
-      <tr><td colspan="3" style="height:20px"></td></tr>
-      <tr>
-        <td class="control-label">Speed:</td>
-        <td colspan="2">
-          <div class="slidecontainer">
-            <input type="range" min="0" max="255" value="150" class="slider" id="Speed" oninput='sendButtonInput("Speed",value)'>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td class="control-label">Pan:</td>
-        <td colspan="2">
-          <div class="slidecontainer">
-            <input type="range" min="0" max="180" value="90" class="slider" id="Pan" oninput='sendButtonInput("Pan",value)'>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td class="control-label">Tilt:</td>
-        <td colspan="2">
-          <div class="slidecontainer">
-            <input type="range" min="0" max="180" value="90" class="slider" id="Tilt" oninput='sendButtonInput("Tilt",value)'>
-          </div>
-        </td>
-      </tr>
-    </table>
+    <div class="container">
+        <h2 class="title">ESP32 Rover Control</h2>
+
+        <div class="control-group">
+            <div class="d-pad">
+                <button id="btn-up" class="d-pad-button" ontouchstart='sendButtonInput("MoveCar","1")' ontouchend='sendButtonInput("MoveCar","0")'>
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 12h5v10h10V12h5z"/></svg>
+                </button>
+                <button id="btn-left" class="d-pad-button" ontouchstart='sendButtonInput("MoveCar","3")' ontouchend='sendButtonInput("MoveCar","0")'>
+                    <svg viewBox="0 0 24 24"><path d="M22 12l-10-10v5H2v10h10v5z"/></svg>
+                </button>
+                <button id="btn-right" class="d-pad-button" ontouchstart='sendButtonInput("MoveCar","4")' ontouchend='sendButtonInput("MoveCar","0")'>
+                    <svg viewBox="0 0 24 24"><path d="M2 12l10 10v-5h10V7H12V2z"/></svg>
+                </button>
+                <button id="btn-down" class="d-pad-button" ontouchstart='sendButtonInput("MoveCar","2")' ontouchend='sendButtonInput("MoveCar","0")'>
+                     <svg viewBox="0 0 24 24"><path d="M12 22L22 12h-5V2H7v10H2z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="slider-group">
+                <label for="Speed" class="slider-label">Speed</label>
+                <input type="range" min="0" max="255" value="150" class="slider" id="Speed" oninput='sendButtonInput("Speed",value)'>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="slider-group">
+                <label for="Pan" class="slider-label">Pan</label>
+                <input type="range" min="0" max="180" value="90" class="slider" id="Pan" oninput='sendButtonInput("Pan",value)'>
+            </div>
+            <div class="slider-group" style="margin-top: 15px;">
+                <label for="Tilt" class="slider-label">Tilt</label>
+                <input type="range" min="0" max="180" value="90" class="slider" id="Tilt" oninput='sendButtonInput("Tilt",value)'>
+            </div>
+        </div>
+    </div>
 
     <script>
-      var webSocketCarInputUrl = "ws:\/\/" + window.location.hostname + "/CarInput";
-      var websocketCarInput;
+        var webSocketCarInputUrl = "ws://" + window.location.hostname + "/CarInput";
+        var websocketCarInput;
 
-      // Theme toggle functionality
-      const themeSwitch = document.getElementById('theme-switch');
-
-      // Check for saved theme preference or prefer-color-scheme
-      const currentTheme = localStorage.getItem('theme') ||
-        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-
-      // Set initial theme
-      if (currentTheme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        themeSwitch.checked = true;
-      }
-
-      // Theme switch event handler
-      themeSwitch.addEventListener('change', function(e) {
-        if (e.target.checked) {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          localStorage.setItem('theme', 'dark');
-        } else {
-          document.documentElement.setAttribute('data-theme', 'light');
-          localStorage.setItem('theme', 'light');
+        const themeSwitch = document.getElementById('theme-switch');
+        const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeSwitch.checked = true;
         }
-      });
 
-      function initCarInputWebSocket()
-      {
-        websocketCarInput = new WebSocket(webSocketCarInputUrl);
-        websocketCarInput.onopen    = function(event)
-        {
-          sendButtonInput("Speed", document.getElementById("Speed").value);
-          sendButtonInput("Pan", document.getElementById("Pan").value);
-          sendButtonInput("Tilt", document.getElementById("Tilt").value);
-        };
-        websocketCarInput.onclose   = function(event){setTimeout(initCarInputWebSocket, 2000);};
-        websocketCarInput.onmessage = function(event){};
-      }
+        themeSwitch.addEventListener('change', function (e) {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
 
-      function initWebSocket()
-      {
-        initCarInputWebSocket();
-      }
+        function initCarInputWebSocket() {
+            websocketCarInput = new WebSocket(webSocketCarInputUrl);
+            websocketCarInput.onopen = function (event) {
+                console.log("WebSocket connected.");
+                sendButtonInput("Speed", document.getElementById("Speed").value);
+                sendButtonInput("Pan", document.getElementById("Pan").value);
+                sendButtonInput("Tilt", document.getElementById("Tilt").value);
+            };
+            websocketCarInput.onclose = function (event) { 
+                console.log("WebSocket disconnected. Retrying...");
+                setTimeout(initCarInputWebSocket, 2000); 
+            };
+            websocketCarInput.onmessage = function (event) { /* Not used */ };
+            websocketCarInput.onerror = function(error) { console.error("WebSocket Error: ", error); };
+        }
 
-      function sendButtonInput(key, value)
-      {
-        var data = key + "," + value;
-        websocketCarInput.send(data);
-      }
+        function sendButtonInput(key, value) {
+            if (websocketCarInput && websocketCarInput.readyState === WebSocket.OPEN) {
+                var data = key + "," + value;
+                websocketCarInput.send(data);
+            }
+        }
 
-      window.onload = initWebSocket;
-      document.getElementById("mainTable").addEventListener("touchend", function(event){
-        event.preventDefault();
-      });
+        window.onload = initCarInputWebSocket;
+        // Prevent zoom on mobile on double-tap
+        document.addEventListener('touchend', function(event) {
+            event.preventDefault();
+        }, { passive: false });
     </script>
-  </body>
+</body>
 </html>
 )HTMLHOMEPAGE";
 
@@ -481,7 +462,7 @@ void setUpPinModes()
   //Set up PWM
   ledcSetup(PWMSpeedChannel, PWMFreq, PWMResolution);
 
-  for (int i = 0; i < motorPins.size(); i++)
+  for (size_t i = 0; i < motorPins.size(); i++)
   {
     pinMode(motorPins[i].pinEn, OUTPUT);
     pinMode(motorPins[i].pinIN1, OUTPUT);
@@ -543,7 +524,7 @@ void loop()
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi connection lost. Attempting to reconnect...");
     WiFi.reconnect();
-
+    
     // Wait for reconnection
     int reconnectAttempts = 0;
     while (WiFi.status() != WL_CONNECTED && reconnectAttempts < maxConnectionAttempts) {
@@ -551,13 +532,13 @@ void loop()
       Serial.print(".");
       reconnectAttempts++;
     }
-
+    
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println("\nWiFi reconnected");
       Serial.print("IP address: ");
       Serial.println(WiFi.localIP());
     }
   }
-
+  
   wsCarInput.cleanupClients();
-}
+}```
