@@ -54,7 +54,7 @@ const int maxConnectionAttempts = 20;
 AsyncWebServer server(80);
 AsyncWebSocket wsCarInput("/CarInput");
 
-// --- NEW BEAUTIFUL HTML INTERFACE ---
+// --- FINAL HTML WITH STOP BUTTON AND THEME TOGGLE ---
 const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
 <!DOCTYPE html>
 <html lang="en">
@@ -66,7 +66,7 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
         :root {
             --bg-color: #e0e5ec;
             --main-color: #007bff;
-            --accent-color: #ff9800;
+            --accent-color: #dc3545; /* Red for Stop */
             --text-color: #333;
             --card-bg: rgba(255, 255, 255, 0.6);
             --shadow-light: #ffffff;
@@ -78,12 +78,12 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
         [data-theme="dark"] {
             --bg-color: #1e1e1e;
             --main-color: #00aaff;
-            --accent-color: #ffc107;
+            --accent-color: #ff4757; /* Brighter Red for Stop on Dark */
             --text-color: #f0f0f0;
             --card-bg: rgba(40, 40, 40, 0.6);
             --shadow-light: #2c2c2c;
             --shadow-dark: #141414;
-            --thumb-color: var(--accent-color);
+            --thumb-color: var(--main-color);
             --track-color: rgba(255, 255, 255, 0.1);
         }
 
@@ -97,8 +97,6 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             transition: background-color 0.3s ease, color 0.3s ease;
             user-select: none;
             -webkit-user-select: none;
@@ -162,13 +160,13 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
 
         #btn-up { grid-column: 2; grid-row: 1; }
         #btn-left { grid-column: 1; grid-row: 2; }
+        #btn-stop { grid-column: 2; grid-row: 2; }
         #btn-right { grid-column: 3; grid-row: 2; }
         #btn-down { grid-column: 2; grid-row: 3; }
+        
+        #btn-stop svg { fill: var(--accent-color); }
 
-        .slider-group {
-            display: flex;
-            flex-direction: column;
-        }
+        .slider-group { display: flex; flex-direction: column; }
         
         .slider-label {
             margin-bottom: 10px;
@@ -188,13 +186,9 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
         }
 
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--thumb-color);
-            cursor: pointer;
+            -webkit-appearance: none; appearance: none;
+            width: 24px; height: 24px; border-radius: 50%;
+            background: var(--thumb-color); cursor: pointer;
             border: 3px solid var(--bg-color);
             box-shadow: 2px 2px 4px var(--shadow-dark), -2px -2px 4px var(--shadow-light);
             transition: transform 0.2s ease;
@@ -202,26 +196,26 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
         
         input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); }
         input[type="range"]::-moz-range-thumb {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--thumb-color);
-            cursor: pointer;
+            width: 24px; height: 24px; border-radius: 50%;
+            background: var(--thumb-color); cursor: pointer;
             border: 3px solid var(--bg-color);
             box-shadow: 2px 2px 4px var(--shadow-dark), -2px -2px 4px var(--shadow-light);
         }
-
-        .theme-switch {
-            position: absolute; top: 20px; right: 20px; display: flex; align-items: center;
+        
+        .footer-controls {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .theme-switch-checkbox { height: 0; width: 0; visibility: hidden; }
         .theme-switch-label {
-            cursor: pointer; width: 45px; height: 24px; background: var(--shadow-dark);
-            display: block; border-radius: 24px; position: relative;
+            cursor: pointer; width: 50px; height: 26px; background: var(--shadow-dark);
+            display: block; border-radius: 26px; position: relative;
         }
         .theme-switch-label:after {
-            content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
-            background: var(--bg-color); border-radius: 18px; transition: 0.3s;
+            content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px;
+            background: var(--bg-color); border-radius: 20px; transition: 0.3s;
         }
         .theme-switch-checkbox:checked + .theme-switch-label:after {
             left: calc(100% - 3px); transform: translateX(-100%);
@@ -229,28 +223,25 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
     </style>
 </head>
 <body>
-
-    <div class="theme-switch">
-        <input class="theme-switch-checkbox" type="checkbox" id="theme-switch">
-        <label class="theme-switch-label" for="theme-switch"></label>
-    </div>
-
     <div class="container">
         <h2 class="title">ESP32 Rover Control</h2>
 
         <div class="control-group">
             <div class="d-pad">
                 <button id="btn-up" class="d-pad-button" ontouchstart='sendButtonInput("MoveCar","1")' ontouchend='sendButtonInput("MoveCar","0")'>
-                    <svg viewBox="0 0 24 24"><path d="M12 2L2 12h5v10h10V12h5z"/></svg>
+                    <svg viewBox="0 0 24 24"><path d="M12 4L4 12h16L12 4z"/></svg>
                 </button>
                 <button id="btn-left" class="d-pad-button" ontouchstart='sendButtonInput("MoveCar","3")' ontouchend='sendButtonInput("MoveCar","0")'>
-                    <svg viewBox="0 0 24 24"><path d="M22 12l-10-10v5H2v10h10v5z"/></svg>
+                    <svg viewBox="0 0 24 24"><path d="M12 4l-8 8 8 8V4z"/></svg>
+                </button>
+                <button id="btn-stop" class="d-pad-button" ontouchstart='sendButtonInput("MoveCar","0")'>
+                    <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
                 </button>
                 <button id="btn-right" class="d-pad-button" ontouchstart='sendButtonInput("MoveCar","4")' ontouchend='sendButtonInput("MoveCar","0")'>
-                    <svg viewBox="0 0 24 24"><path d="M2 12l10 10v-5h10V7H12V2z"/></svg>
+                    <svg viewBox="0 0 24 24"><path d="M12 4l8 8-8 8V4z"/></svg>
                 </button>
                 <button id="btn-down" class="d-pad-button" ontouchstart='sendButtonInput("MoveCar","2")' ontouchend='sendButtonInput("MoveCar","0")'>
-                     <svg viewBox="0 0 24 24"><path d="M12 22L22 12h-5V2H7v10H2z"/></svg>
+                     <svg viewBox="0 0 24 24"><path d="M12 20l8-8H4l8 8z"/></svg>
                 </button>
             </div>
         </div>
@@ -272,6 +263,13 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
                 <input type="range" min="0" max="180" value="90" class="slider" id="Tilt" oninput='sendButtonInput("Tilt",value)'>
             </div>
         </div>
+        
+        <div class="footer-controls">
+            <div class="theme-switch">
+                <input class="theme-switch-checkbox" type="checkbox" id="theme-switch">
+                <label class="theme-switch-label" for="theme-switch"></label>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -279,22 +277,19 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
         var websocketCarInput;
 
         const themeSwitch = document.getElementById('theme-switch');
-        const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         
-        if (currentTheme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            themeSwitch.checked = true;
+        function set_theme(theme_name) {
+            document.documentElement.setAttribute('data-theme', theme_name);
+            localStorage.setItem('theme', theme_name);
+            themeSwitch.checked = (theme_name === 'dark');
         }
 
         themeSwitch.addEventListener('change', function (e) {
-            if (e.target.checked) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
+            set_theme(e.target.checked ? 'dark' : 'light');
         });
+
+        const currentTheme = localStorage.getItem('theme') || 'dark'; // Default to dark theme
+        set_theme(currentTheme);
 
         function initCarInputWebSocket() {
             websocketCarInput = new WebSocket(webSocketCarInputUrl);
@@ -308,7 +303,6 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
                 console.log("WebSocket disconnected. Retrying...");
                 setTimeout(initCarInputWebSocket, 2000); 
             };
-            websocketCarInput.onmessage = function (event) { /* Not used */ };
             websocketCarInput.onerror = function(error) { console.error("WebSocket Error: ", error); };
         }
 
@@ -320,7 +314,6 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
         }
 
         window.onload = initCarInputWebSocket;
-        // Prevent zoom on mobile on double-tap
         document.addEventListener('touchend', function(event) {
             event.preventDefault();
         }, { passive: false });
@@ -541,4 +534,4 @@ void loop()
   }
   
   wsCarInput.cleanupClients();
-}```
+}
